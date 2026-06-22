@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Local config (user-specific, not for sharing)
+local-server/frames.json
+local-server/library/
+
+# OS
+.DS_Store
+Thumbs.db

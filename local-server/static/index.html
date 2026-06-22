@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fraimic Local Controller</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #141414;
+    --surface:  #1e1e1e;
+    --card:     #272727;
+    --border:   #333;
+    --accent:   #4f8ef7;
+    --accent2:  #3a6fd8;
+    --success:  #4caf50;
+    --error:    #e05252;
+    --warn:     #f0a500;
+    --text:     #e2e2e2;
+    --sub:      #888;
+    --radius:   8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  header h1 { font-size: 17px; font-weight: 600; }
+  .server-info {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--sub);
+    font-family: monospace;
+  }
+  .server-info span { color: var(--text); }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── Frames sidebar ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 14px 16px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    color: var(--sub);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .frames-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .frame-card {
+    background: var(--card);
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    position: relative;
+  }
+  .frame-card:hover { border-color: var(--accent); }
+  .frame-card.selected {
+    border-color: var(--accent);
+    background: #1a2840;
+  }
+  .frame-name {
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .online-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--sub);
+    flex-shrink: 0;
+  }
+  .online-dot.online { background: var(--success); }
+  .online-dot.offline { background: var(--error); }
+  .frame-ip {
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--sub);
+    margin-bottom: 6px;
+  }
+  .battery-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--sub);
+  }
+  .battery-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .battery-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 2px;
+    transition: width .4s;
+  }
+  .battery-fill.low { background: var(--error); }
+  .battery-fill.mid { background: var(--warn); }
+  .frame-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .btn-sm {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--sub);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.danger:hover { border-color: var(--error); color: var(--error); }
+
+  .sidebar-footer {
+    padding: 10px 8px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .add-frame-form { display: flex; flex-direction: column; gap: 6px; }
+  .add-frame-form input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 13px;
+    width: 100%;
+  }
+  .add-frame-form input:focus { outline: none; border-color: var(--accent); }
+  .add-frame-form input::placeholder { color: var(--sub); }
+  .btn-row { display: flex; gap: 6px; }
+  .btn {
+    flex: 1;
+    padding: 7px 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-success { background: var(--success); color: #fff; font-size: 15px; font-weight: 600; }
+  .btn-success:hover { filter: brightness(1.1); }
+  .btn-success:disabled { background: var(--border); color: var(--sub); cursor: not-allowed; }
+  .btn-danger { background: var(--error); color: #fff; }
+  .btn-danger:hover { filter: brightness(1.1); }
+
+  /* ── Main panel ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sub);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .15s;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content {
+    flex: 1;
+    overflow: hidden;
+    display: none;
+  }
+  .tab-content.active { display: flex; flex-direction: column; }
+
+  /* ── Library grid ── */
+  .library-toolbar {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+  .library-toolbar input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 5px 10px;
+    font-size: 13px;
+    width: 200px;
+  }
+  .library-toolbar input::placeholder { color: var(--sub); }
+  .library-toolbar input:focus { outline: none; border-color: var(--accent); }
+  .library-count { font-size: 12px; color: var(--sub); margin-left: auto; }
+
+  .library-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    align-content: start;
+  }
+  .image-card {
+    background: var(--card);
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s, transform .1s;
+    aspect-ratio: 4/3;
+    position: relative;
+  }
+  .image-card:hover { border-color: var(--accent); transform: scale(1.02); }
+  .image-card.selected { border-color: var(--accent); }
+  .image-card.selected::after {
+    content: "✓";
+    position: absolute;
+    top: 6px; right: 6px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .image-card img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .image-card-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,.7));
+    padding: 16px 6px 5px;
+    font-size: 10px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .image-card .del-btn {
+    position: absolute;
+    top: 4px; left: 4px;
+    background: rgba(0,0,0,.6);
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 12px;
+    width: 22px; height: 22px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .image-card:hover .del-btn { display: flex; }
+  .del-btn:hover { background: var(--error) !important; }
+
+  .library-empty {
+    color: var(--sub);
+    text-align: center;
+    padding: 60px 20px;
+    font-size: 14px;
+    grid-column: 1/-1;
+  }
+
+  /* ── Upload tab ── */
+  .upload-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 24px;
+  }
+  .drop-zone {
+    width: 100%;
+    max-width: 500px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--card);
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: #1a2840;
+  }
+  .drop-zone-icon { font-size: 48px; margin-bottom: 12px; }
+  .drop-zone-text { font-size: 15px; margin-bottom: 6px; }
+  .drop-zone-sub { font-size: 12px; color: var(--sub); }
+  .upload-preview {
+    max-width: 500px;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--card);
+    display: none;
+  }
+  .upload-preview img {
+    width: 100%; height: auto;
+    display: block;
+    max-height: 280px;
+    object-fit: contain;
+    background: #111;
+  }
+  .upload-preview-info {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--sub);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .save-to-lib-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--sub);
+    cursor: pointer;
+  }
+  .save-to-lib-row input { cursor: pointer; }
+
+  /* ── Send panel ── */
+  .send-panel {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .send-options {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .option-group { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .option-group label { color: var(--sub); font-size: 12px; }
+  .option-group select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .option-group select:focus { outline: none; border-color: var(--accent); }
+
+  .send-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .send-summary {
+    flex: 1;
+    font-size: 13px;
+    color: var(--sub);
+  }
+  .send-summary strong { color: var(--text); }
+  .send-btn {
+    padding: 10px 28px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--success);
+    color: #fff;
+    transition: all .15s;
+    min-width: 160px;
+  }
+  .send-btn:hover:not(:disabled) { filter: brightness(1.1); }
+  .send-btn:disabled { background: var(--border); color: var(--sub); cursor: not-allowed; }
+  .send-btn.sending { background: var(--accent); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .3s;
+    pointer-events: none;
+    z-index: 999;
+    max-width: 320px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error   { background: var(--error); }
+  .toast.info    { background: var(--accent); }
+
+  /* ── Rename dialog ── */
+  .dialog-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .dialog-overlay.open { display: flex; }
+  .dialog {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    width: 340px;
+  }
+  .dialog h2 { font-size: 15px; margin-bottom: 16px; }
+  .dialog input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .dialog input:focus { outline: none; border-color: var(--accent); }
+  .dialog-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── Scan overlay ── */
+  .scan-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .scan-overlay.open { display: flex; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+  .icon { font-style: normal; }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:22px">🖼</span>
+  <h1>Fraimic Local Controller</h1>
+  <div class="server-info">Server: <span id="serverIp">loading…</span></div>
+</header>
+
+<div class="layout">
+
+  <!-- Frames sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      Frames
+      <button class="btn-sm" onclick="startScan()" title="Scan network for frames">⟳ Scan</button>
+    </div>
+
+    <div class="frames-list" id="framesList">
+      <div style="color:var(--sub);font-size:13px;padding:16px 8px;text-align:center">
+        Loading frames…
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="add-frame-form" id="addFrameForm">
+        <input type="text" id="newFrameIp"   placeholder="IP address (e.g. 192.168.1.50)">
+        <input type="text" id="newFrameName" placeholder="Name (optional)">
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addFrame()">Add Frame</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('library', this)">Library</div>
+      <div class="tab" onclick="showTab('upload', this)">Upload</div>
+    </div>
+
+    <!-- Library tab -->
+    <div class="tab-content active" id="tab-library">
+      <div class="library-toolbar">
+        <input type="text" id="searchInput" placeholder="Search…" oninput="filterLibrary()">
+        <span class="library-count" id="libraryCount"></span>
+        <button class="btn btn-secondary" style="flex:none" onclick="loadLibrary()">↻ Refresh</button>
+      </div>
+      <div class="library-grid" id="libraryGrid">
+        <div class="library-empty">Loading library…</div>
+      </div>
+    </div>
+
+    <!-- Upload tab -->
+    <div class="tab-content" id="tab-upload">
+      <div class="upload-area">
+        <div class="drop-zone" id="dropZone"
+             onclick="document.getElementById('fileInput').click()"
+             ondragover="handleDragOver(event)"
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event)">
+          <div class="drop-zone-icon">📁</div>
+          <div class="drop-zone-text">Drop an image here</div>
+          <div class="drop-zone-sub">or click to browse — JPG, PNG, WEBP, GIF</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none"
+               onchange="handleFileSelect(event)">
+
+        <div class="upload-preview" id="uploadPreview">
+          <img id="uploadPreviewImg" src="" alt="Preview">
+          <div class="upload-preview-info">
+            <span id="uploadFileName">—</span>
+            <label class="save-to-lib-row">
+              <input type="checkbox" id="saveToLib" checked>
+              Save to library
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Send panel (always visible) -->
+    <div class="send-panel">
+      <div class="send-options">
+        <div class="option-group">
+          <label>Resize</label>
+          <select id="resizeMode">
+            <option value="fill">Fill (crop)</option>
+            <option value="fit">Fit (letterbox)</option>
+            <option value="stretch">Stretch</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <label>Rotate</label>
+          <select id="rotateVal">
+            <option value="0">0°</option>
+            <option value="90">90° CW</option>
+            <option value="180">180°</option>
+            <option value="270">270° CW</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <label>After send</label>
+          <select id="refreshMode">
+            <option value="true">Refresh display</option>
+            <option value="false">Upload only</option>
+          </select>
+        </div>
+      </div>
+      <div class="send-row">
+        <div class="send-summary" id="sendSummary">
+          Select a frame and an image to send
+        </div>
+        <button class="send-btn" id="sendBtn" disabled onclick="sendImage()">
+          Send to Frame
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Rename dialog -->
+<div class="dialog-overlay" id="renameDialog">
+  <div class="dialog">
+    <h2>Rename Frame</h2>
+    <input type="text" id="renameInput" placeholder="Frame name">
+    <div class="dialog-btns">
+      <button class="btn btn-secondary" onclick="closeRename()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmRename()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scan overlay -->
+<div class="scan-overlay" id="scanOverlay">
+  <div class="spinner"></div>
+  <div style="color:var(--text);font-size:14px">Scanning network for Fraimic frames…</div>
+  <div style="color:var(--sub);font-size:12px">This may take 10–15 seconds</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+
+let state = {
+  frames:        [],
+  selectedFrame: null,     // IP string
+  library:       [],
+  filteredLib:   [],
+  selectedImage: null,     // {source: 'library'|'upload', name, file?}
+  currentTab:    'library',
+  renameTarget:  null,
+  sending:       false,
+};
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+async function init() {
+  await Promise.all([loadStatus(), loadFrames(), loadLibrary()]);
+}
+
+async function loadStatus() {
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+    document.getElementById('serverIp').textContent = `${d.local_ip}:${location.port || 5000}`;
+  } catch {}
+}
+
+// ── Frames ───────────────────────────────────────────────────────────────────
+
+async function loadFrames() {
+  try {
+    const r = await fetch('/api/frames');
+    state.frames = await r.json();
+    renderFrames();
+    // Refresh live info for each frame in background
+    state.frames.forEach(f => refreshFrameInfo(f.ip));
+  } catch (e) {
+    console.error('loadFrames', e);
+  }
+}
+
+async function refreshFrameInfo(ip) {
+  try {
+    const r = await fetch(`/api/frames/${ip}/info`);
+    if (!r.ok) return;
+    const info = await r.json();
+    // Store info on frame object
+    const frame = state.frames.find(f => f.ip === ip);
+    if (frame) {
+      frame._info = info;
+      frame._online = true;
+      renderFrames();
+    }
+  } catch {
+    const frame = state.frames.find(f => f.ip === ip);
+    if (frame) { frame._online = false; renderFrames(); }
+  }
+}
+
+function renderFrames() {
+  const list = document.getElementById('framesList');
+  if (state.frames.length === 0) {
+    list.innerHTML = `<div style="color:var(--sub);font-size:13px;padding:16px 8px;text-align:center">
+      No frames yet.<br>Add one below.
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = state.frames.map(f => {
+    const info    = f._info || {};
+    const online  = f._online;
+    const battery = info.battery_pct ?? null;
+    const sel     = state.selectedFrame === f.ip;
+
+    const dotClass = online === undefined ? '' : (online ? 'online' : 'offline');
+    const batClass = battery !== null ? (battery < 20 ? 'low' : battery < 50 ? 'mid' : '') : '';
+    const batWidth = battery !== null ? battery : 0;
+
+    return `
+    <div class="frame-card${sel ? ' selected' : ''}" onclick="selectFrame('${f.ip}')">
+      <div class="frame-name">
+        <span class="online-dot ${dotClass}"></span>
+        ${esc(f.name)}
+      </div>
+      <div class="frame-ip">${esc(f.ip)}</div>
+      ${battery !== null ? `
+      <div class="battery-row">
+        <span>🔋</span>
+        <div class="battery-bar"><div class="battery-fill ${batClass}" style="width:${batWidth}%"></div></div>
+        <span>${battery}%</span>
+      </div>` : (online === false ? `<div style="font-size:11px;color:var(--error)">Offline</div>` : '')}
+      <div class="frame-actions">
+        <button class="btn-sm" onclick="event.stopPropagation();openRename('${f.ip}')">Rename</button>
+        <button class="btn-sm danger" onclick="event.stopPropagation();deleteFrame('${f.ip}')">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateSendSummary();
+}
+
+function selectFrame(ip) {
+  state.selectedFrame = ip;
+  renderFrames();
+}
+
+async function addFrame() {
+  const ip   = document.getElementById('newFrameIp').value.trim();
+  const name = document.getElementById('newFrameName').value.trim();
+  if (!ip) return toast('Enter an IP address', 'error');
+
+  const r = await fetch('/api/frames', {
+    method:  'POST',
+    headers: {'Content-Type': 'application/json'},
+    body:    JSON.stringify({ ip, name: name || ip }),
+  });
+  if (!r.ok) return toast('Failed to add frame', 'error');
+
+  document.getElementById('newFrameIp').value   = '';
+  document.getElementById('newFrameName').value = '';
+  await loadFrames();
+  state.selectedFrame = ip;
+  renderFrames();
+  toast(`Added ${name || ip}`, 'success');
+}
+
+async function deleteFrame(ip) {
+  if (!confirm(`Remove frame ${ip}?`)) return;
+  await fetch(`/api/frames/${encodeURIComponent(ip)}`, { method: 'DELETE' });
+  if (state.selectedFrame === ip) state.selectedFrame = null;
+  await loadFrames();
+  toast('Frame removed', 'info');
+}
+
+// Rename dialog
+let renameIp = null;
+function openRename(ip) {
+  renameIp = ip;
+  const frame = state.frames.find(f => f.ip === ip);
+  document.getElementById('renameInput').value = frame?.name || '';
+  document.getElementById('renameDialog').classList.add('open');
+  setTimeout(() => document.getElementById('renameInput').select(), 50);
+}
+function closeRename() {
+  document.getElementById('renameDialog').classList.remove('open');
+  renameIp = null;
+}
+async function confirmRename() {
+  const name = document.getElementById('renameInput').value.trim();
+  if (!name || !renameIp) return;
+  await fetch(`/api/frames/${encodeURIComponent(renameIp)}`, {
+    method:  'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body:    JSON.stringify({ name }),
+  });
+  closeRename();
+  await loadFrames();
+  toast('Renamed', 'success');
+}
+
+// Network scan
+async function startScan() {
+  document.getElementById('scanOverlay').classList.add('open');
+  try {
+    const r = await fetch('/api/scan', { method: 'POST' });
+    const found = await r.json();
+    document.getElementById('scanOverlay').classList.remove('open');
+
+    if (found.length === 0) {
+      toast('No frames found on network', 'info');
+      return;
+    }
+
+    for (const { ip, info } of found) {
+      // Auto-add if not already known
+      if (!state.frames.find(f => f.ip === ip)) {
+        await fetch('/api/frames', {
+          method:  'POST',
+          headers: {'Content-Type': 'application/json'},
+          body:    JSON.stringify({ ip, name: info.device_id ? `Frame ${ip.split('.').pop()}` : ip }),
+        });
+      }
+    }
+    await loadFrames();
+    toast(`Found ${found.length} frame${found.length > 1 ? 's' : ''}`, 'success');
+  } catch (e) {
+    document.getElementById('scanOverlay').classList.remove('open');
+    toast('Scan failed: ' + e.message, 'error');
+  }
+}
+
+// ── Library ───────────────────────────────────────────────────────────────────
+
+async function loadLibrary() {
+  try {
+    const r = await fetch('/api/library');
+    state.library = await r.json();
+    state.filteredLib = [...state.library];
+    renderLibrary();
+  } catch {}
+}
+
+function filterLibrary() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  state.filteredLib = q
+    ? state.library.filter(img => img.name.toLowerCase().includes(q))
+    : [...state.library];
+  renderLibrary();
+}
+
+function renderLibrary() {
+  const grid = document.getElementById('libraryGrid');
+  document.getElementById('libraryCount').textContent =
+    `${state.library.length} image${state.library.length !== 1 ? 's' : ''}`;
+
+  if (state.filteredLib.length === 0) {
+    grid.innerHTML = `<div class="library-empty">
+      ${state.library.length === 0
+        ? 'Library is empty.<br>Upload images to get started.'
+        : 'No images match your search.'}
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = state.filteredLib.map(img => `
+    <div class="image-card${state.selectedImage?.name === img.name && state.selectedImage?.source === 'library' ? ' selected' : ''}"
+         onclick="selectLibraryImage('${esc(img.name)}')">
+      <img src="${img.url}" loading="lazy" alt="${esc(img.name)}">
+      <div class="image-card-label">${esc(img.name)}</div>
+      <button class="del-btn" onclick="event.stopPropagation();deleteLibraryImage('${esc(img.name)}')"
+              title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+function selectLibraryImage(name) {
+  state.selectedImage = { source: 'library', name };
+  renderLibrary();
+  updateSendSummary();
+}
+
+async function deleteLibraryImage(name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  await fetch(`/api/library/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  if (state.selectedImage?.name === name) state.selectedImage = null;
+  await loadLibrary();
+  updateSendSummary();
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────────
+
+let uploadedFile = null;
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.add('dragover');
+}
+function handleDragLeave() {
+  document.getElementById('dropZone').classList.remove('dragover');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) loadUploadedFile(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) loadUploadedFile(file);
+}
+
+function loadUploadedFile(file) {
+  uploadedFile = file;
+  state.selectedImage = { source: 'upload', name: file.name, file };
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('uploadPreviewImg').src = e.target.result;
+    document.getElementById('uploadFileName').textContent = file.name;
+    document.getElementById('uploadPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  updateSendSummary();
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+
+function showTab(name, el) {
+  state.currentTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// ── Send ─────────────────────────────────────────────────────────────────────
+
+function updateSendSummary() {
+  const frame = state.frames.find(f => f.ip === state.selectedFrame);
+  const img   = state.selectedImage;
+  const btn   = document.getElementById('sendBtn');
+  const sum   = document.getElementById('sendSummary');
+
+  if (frame && img) {
+    sum.innerHTML = `Send <strong>${esc(img.name)}</strong> → <strong>${esc(frame.name)}</strong>`;
+    btn.disabled = state.sending;
+  } else if (!frame && !img) {
+    sum.textContent = 'Select a frame and an image to send';
+    btn.disabled = true;
+  } else if (!frame) {
+    sum.textContent = 'Select a frame →';
+    btn.disabled = true;
+  } else {
+    sum.textContent = 'Select an image ↑';
+    btn.disabled = true;
+  }
+}
+
+async function sendImage() {
+  if (state.sending) return;
+  const frame = state.frames.find(f => f.ip === state.selectedFrame);
+  const img   = state.selectedImage;
+  if (!frame || !img) return;
+
+  state.sending = true;
+  const btn = document.getElementById('sendBtn');
+  btn.textContent = 'Converting…';
+  btn.classList.add('sending');
+  btn.disabled = true;
+
+  const fd = new FormData();
+  fd.append('frame_ip',    frame.ip);
+  fd.append('resize_mode', document.getElementById('resizeMode').value);
+  fd.append('rotate',      document.getElementById('rotateVal').value);
+  fd.append('refresh',     document.getElementById('refreshMode').value);
+
+  if (img.source === 'upload') {
+    fd.append('image', img.file);
+    if (document.getElementById('saveToLib').checked) fd.append('save', 'true');
+  } else {
+    fd.append('library_name', img.name);
+  }
+
+  try {
+    btn.textContent = 'Sending…';
+    const r = await fetch('/api/send', { method: 'POST', body: fd });
+    const d = await r.json();
+
+    if (r.ok) {
+      toast(`✓ Sent to ${frame.name}`, 'success');
+      if (img.source === 'upload' && document.getElementById('saveToLib').checked) {
+        await loadLibrary();
+      }
+    } else {
+      toast('Error: ' + (d.error || 'unknown'), 'error');
+    }
+  } catch (e) {
+    toast('Send failed: ' + e.message, 'error');
+  } finally {
+    state.sending = false;
+    btn.textContent = 'Send to Frame';
+    btn.classList.remove('sending');
+    updateSendSummary();
+  }
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeRename();
+  if (e.key === 'Enter' && document.getElementById('renameDialog').classList.contains('open')) {
+    confirmRename();
+  }
+});
+
+document.getElementById('newFrameIp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addFrame();
+});
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+let toastTimer;
+function toast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+
+init();
+
+// Poll frame info every 60 seconds
+setInterval(() => {
+  state.frames.forEach(f => refreshFrameInfo(f.ip));
+}, 60000);
+</script>
+</body>
+</html>

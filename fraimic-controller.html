@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fraimic Controller — Setup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a1a;
+    color: #e0e0ff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { color: #7070aa; font-size: 16px; margin-bottom: 48px; }
+
+  .card {
+    background: #12122a;
+    border: 1px solid #2a2a5a;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 640px;
+    width: 100%;
+    margin-bottom: 24px;
+  }
+  .card h2 { font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #3a3aff; color: #fff; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  p { color: #8888bb; line-height: 1.6; margin-bottom: 12px; font-size: 15px; }
+  p:last-child { margin-bottom: 0; }
+
+  .bookmark-area {
+    background: #0e0e28;
+    border: 2px dashed #3a3aff;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    margin: 20px 0;
+  }
+  .bookmark-area p { margin-bottom: 16px; color: #9090cc; font-size: 14px; }
+
+  /* The bookmarklet link — styled to look draggable */
+  #bm-link {
+    display: inline-block;
+    background: linear-gradient(135deg, #3a3aff, #6060ff);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: grab;
+    box-shadow: 0 4px 20px rgba(60,60,255,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  #bm-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(60,60,255,0.5);
+  }
+  #bm-link:active { cursor: grabbing; }
+
+  .arrow-hint {
+    font-size: 13px;
+    color: #5050aa;
+    margin-top: 12px;
+  }
+
+  code {
+    background: #1a1a3a;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 13px;
+    color: #80a0ff;
+  }
+
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+  }
+  .feature-list li {
+    padding: 6px 0;
+    color: #8888bb;
+    font-size: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .feature-list li::before {
+    content: '✓';
+    color: #5050ff;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .tip {
+    background: #1a1a38;
+    border-left: 3px solid #5050ff;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #8888bb;
+    margin-top: 16px;
+  }
+
+  footer { color: #444466; font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<h1>🖼️ Fraimic Controller</h1>
+<p class="subtitle">Send images to any specific frame — no tapping required</p>
+
+<!-- Step 1: Install -->
+<div class="card">
+  <h2><span class="step-num">1</span> Install the Bookmarklet</h2>
+  <p>Drag the button below into your browser's bookmarks bar. You only need to do this once.</p>
+
+  <div class="bookmark-area">
+    <p>Drag this to your bookmarks bar ↓</p>
+    <a id="bm-link" href="BOOKMARKLET_PLACEHOLDER">🖼️ Fraimic Controller</a>
+    <div class="arrow-hint">← drag me to the bookmarks bar →</div>
+  </div>
+
+  <p>If your bookmarks bar isn't visible, press <code>⌘ Shift B</code> (Mac) or <code>Ctrl Shift B</code> (Windows) to show it.</p>
+</div>
+
+<!-- Step 2: Use -->
+<div class="card">
+  <h2><span class="step-num">2</span> Use the Controller</h2>
+  <p>Each time you want to send an image to a specific frame:</p>
+  <ul class="feature-list">
+    <li>Go to <strong style="color:#e0e0ff">app.fraimic.com</strong> in Chrome (you need to be logged in)</li>
+    <li>Click <strong style="color:#e0e0ff">🖼️ Fraimic Controller</strong> in your bookmarks bar</li>
+    <li>A panel will appear — select the destination frame</li>
+    <li>Drop or choose your image</li>
+    <li>Click <strong style="color:#e0e0ff">Send to Selected Frame</strong></li>
+  </ul>
+  <div class="tip">
+    💡 <strong>Tip:</strong> You can rename your frames from the controller panel so they're easier to identify (e.g. "Living Room", "Bedroom"). Names are saved to your Fraimic account.
+  </div>
+</div>
+
+<!-- Features -->
+<div class="card">
+  <h2>✦ What It Does</h2>
+  <ul class="feature-list">
+    <li>Lists all your frames with battery level and last-seen time</li>
+    <li>Lets you name each frame for easy identification</li>
+    <li>Sends images directly to the frame you choose — no tapping required</li>
+    <li>Supports drag-and-drop or file picker</li>
+    <li>Works with JPG, PNG, and WebP</li>
+    <li>Click the bookmark again to close the panel</li>
+  </ul>
+</div>
+
+<footer>Fraimic Controller · Built for app.fraimic.com</footer>
+
+<script>
+// Build the bookmarklet code and inject it as the href
+const bookmarkletCode = (function() {
+  // This is the controller code — it will be stringified and used as a bookmarklet
+  function controller() {
+    var ID = 'fc-panel';
+    var existing = document.getElementById(ID);
+    if (existing) { existing.remove(); document.getElementById('fc-style') && document.getElementById('fc-style').remove(); return; }
+
+    if (!location.hostname.includes('fraimic.com')) {
+      alert('Please run this on app.fraimic.com'); return;
+    }
+
+    var stored = localStorage.getItem('sb-sclpedxwezoiwzesfdps-auth-token');
+    if (!stored) { alert('Please log in to app.fraimic.com first'); return; }
+
+    var tokenData = JSON.parse(stored);
+    var token = tokenData.access_token;
+    var API = 'https://origin.fraimic.com/api/v1';
+    var devices = [], selectedDevice = null, pendingFile = null;
+
+    // --- Styles ---
+    var style = document.createElement('style');
+    style.id = 'fc-style';
+    style.textContent = [
+      '#fc-panel{position:fixed;top:20px;right:20px;width:360px;background:#0f0f23;border:1px solid #2a2a5a;border-radius:16px;padding:0;z-index:2147483647;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e0e0ff;box-shadow:0 24px 80px rgba(0,0,0,.8);overflow:hidden}',
+      '#fc-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:linear-gradient(135deg,#1a1a3e,#12122e);border-bottom:1px solid #2a2a5a;font-size:14px;font-weight:700;gap:8px}',
+      '#fc-hdr span{display:flex;align-items:center;gap:8px}',
+      '#fc-close{background:none;border:none;color:#5050aa;font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}',
+      '#fc-close:hover{color:#e0e0ff}',
+      '#fc-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}',
+      '.fc-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#4444aa;font-weight:700;margin-bottom:-4px}',
+      '.fc-frame{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#1a1a3a;border:2px solid transparent;border-radius:10px;cursor:pointer;transition:all .15s}',
+      '.fc-frame:hover{border-color:#3a3aff;background:#1e1e44}',
+      '.fc-frame.sel{border-color:#5050ff;background:#20205a}',
+      '.fc-fi{font-size:22px;flex-shrink:0}',
+      '.fc-fn{font-weight:600;font-size:13px;color:#e0e0ff;display:flex;align-items:center;gap:4px}',
+      '.fc-fm{font-size:11px;color:#5555aa;margin-top:2px}',
+      '.fc-ren{background:none;border:none;color:#3333aa;cursor:pointer;font-size:11px;padding:0 2px;transition:color .15s}',
+      '.fc-ren:hover{color:#8080ff}',
+      '#fc-drop{border:2px dashed #2a2a5a;border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s;background:#0e0e22}',
+      '#fc-drop:hover,#fc-drop.over{border-color:#5050ff;background:#12123a}',
+      '#fc-drop-lbl{color:#4444aa;font-size:13px;cursor:pointer;display:block}',
+      '#fc-drop-lbl:hover{color:#8080ff}',
+      '#fc-fname{margin-top:6px;font-size:12px;color:#6060ff;font-weight:600;min-height:16px}',
+      '#fc-send{display:block;width:100%;padding:11px;background:linear-gradient(135deg,#3a3aff,#5050ff);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}',
+      '#fc-send:hover:not(:disabled){opacity:.85}',
+      '#fc-send:disabled{background:#1a1a3a;color:#3a3a6a;cursor:not-allowed}',
+      '#fc-status{font-size:12px;color:#5555aa;text-align:center;min-height:18px;padding:2px 0}',
+    ].join('');
+    document.head.appendChild(style);
+
+    // --- Panel HTML ---
+    var panel = document.createElement('div');
+    panel.id = ID;
+    panel.innerHTML = '<div id="fc-hdr"><span>🖼️ Fraimic Controller</span><button id="fc-close" title="Close">✕</button></div>' +
+      '<div id="fc-body">' +
+        '<div class="fc-label">Select frame</div>' +
+        '<div id="fc-frames"><div style="color:#3a3a7a;font-size:13px;padding:8px 0">Loading frames…</div></div>' +
+        '<div class="fc-label">Image</div>' +
+        '<div id="fc-drop"><input type="file" id="fc-file" accept="image/*" style="display:none">' +
+          '<label id="fc-drop-lbl" for="fc-file">📁 Choose image or drag &amp; drop here</label>' +
+          '<div id="fc-fname"></div>' +
+        '</div>' +
+        '<button id="fc-send" disabled>Send to Selected Frame</button>' +
+        '<div id="fc-status"></div>' +
+      '</div>';
+    document.body.appendChild(panel);
+
+    // --- Wire up close ---
+    document.getElementById('fc-close').onclick = function() {
+      panel.remove(); style.remove();
+    };
+
+    // --- Wire up file input ---
+    document.getElementById('fc-file').onchange = function() {
+      if (this.files[0]) setFile(this.files[0]);
+    };
+
+    // --- Drag & drop ---
+    var drop = document.getElementById('fc-drop');
+    drop.ondragover = function(e) { e.preventDefault(); drop.classList.add('over'); };
+    drop.ondragleave = function() { drop.classList.remove('over'); };
+    drop.ondrop = function(e) {
+      e.preventDefault(); drop.classList.remove('over');
+      if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+    };
+
+    // --- Send ---
+    document.getElementById('fc-send').onclick = sendImage;
+
+    // --- Helpers ---
+    function setFile(f) {
+      pendingFile = f;
+      document.getElementById('fc-fname').textContent = '📷 ' + f.name;
+      updateBtn();
+    }
+
+    function updateBtn() {
+      document.getElementById('fc-send').disabled = !(pendingFile && selectedDevice);
+    }
+
+    function setStatus(msg, color) {
+      var s = document.getElementById('fc-status');
+      if (s) { s.textContent = msg; s.style.color = color || '#5555aa'; }
+    }
+
+    function timeAgo(iso) {
+      var diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+      if (diff < 1) return 'just now';
+      if (diff < 60) return diff + 'm ago';
+      if (diff < 1440) return Math.floor(diff / 60) + 'h ago';
+      return Math.floor(diff / 1440) + 'd ago';
+    }
+
+    function batIcon(pct) {
+      if (pct == null) return '';
+      if (pct > 75) return '🟢 ' + pct + '%';
+      if (pct > 40) return '🟡 ' + pct + '%';
+      return '🔴 ' + pct + '%';
+    }
+
+    // --- API ---
+    function apiRequest(path, opts) {
+      var o = opts || {};
+      var headers = Object.assign({ 'Authorization': 'Bearer ' + token }, o.headers || {});
+      if (o.body && !(o.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+      return fetch(API + path, Object.assign({}, o, { headers: headers })).then(function(r) { return r.json(); });
+    }
+
+    // --- Load frames ---
+    function loadFrames() {
+      apiRequest('/account/devices').then(function(data) {
+        devices = data.devices || [];
+        renderFrames();
+      }).catch(function() {
+        document.getElementById('fc-frames').innerHTML = '<div style="color:#aa4444;font-size:13px">Error loading frames</div>';
+      });
+    }
+
+    function renderFrames() {
+      var container = document.getElementById('fc-frames');
+      if (!devices.length) { container.innerHTML = '<div style="color:#3a3a7a;font-size:13px">No frames found</div>'; return; }
+      container.innerHTML = '';
+      devices.forEach(function(d, i) {
+        var name = d.device_name || ('Frame ' + (i + 1));
+        var card = document.createElement('div');
+        card.className = 'fc-frame';
+        card.dataset.id = d.device_id;
+        card.innerHTML = '<div class="fc-fi">🖼️</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="fc-fn">' + name + ' <button class="fc-ren" data-id="' + d.device_id + '" data-name="' + name + '" title="Rename">✏️</button></div>' +
+            '<div class="fc-fm">' + (d.ip_address || '') + (d.ip_address ? ' · ' : '') + batIcon(d.battery_pct) + (d.last_seen_at ? ' · ' + timeAgo(d.last_seen_at) : '') + '</div>' +
+          '</div>';
+        card.querySelector('.fc-ren').onclick = function(ev) {
+          ev.stopPropagation();
+          var btn = ev.currentTarget;
+          var n = prompt('Name this frame:', btn.dataset.name);
+          if (n && n.trim()) renameFrame(d.device_id, n.trim(), card);
+        };
+        card.onclick = function(ev) {
+          if (ev.target.classList.contains('fc-ren') || ev.target.closest('.fc-ren')) return;
+          document.querySelectorAll('.fc-frame').forEach(function(c) { c.classList.remove('sel'); });
+          card.classList.add('sel');
+          selectedDevice = d.device_id;
+          updateBtn();
+        };
+        container.appendChild(card);
+      });
+    }
+
+    function renameFrame(id, name, card) {
+      apiRequest('/account/device-name', {
+        method: 'POST',
+        body: JSON.stringify({ device_id: id, name: name })
+      }).then(function() {
+        var dev = devices.find(function(d) { return d.device_id === id; });
+        if (dev) dev.device_name = name;
+        var fn = card.querySelector('.fc-fn');
+        if (fn) fn.innerHTML = name + ' <button class="fc-ren" data-id="' + id + '" data-name="' + name + '" title="Rename">✏️</button>';
+        var btn = card.querySelector('.fc-ren');
+        if (btn) btn.onclick = function(ev) {
+          ev.stopPropagation();
+          var n = prompt('Name this frame:', name);
+          if (n && n.trim()) renameFrame(id, n.trim(), card);
+        };
+        setStatus('✓ Renamed to "' + name + '"', '#5555ff');
+      }).catch(function() {
+        setStatus('Rename failed', '#aa4444');
+      });
+    }
+
+    // --- Upload flow ---
+    async function sendImage() {
+      if (!pendingFile || !selectedDevice) return;
+      document.getElementById('fc-send').disabled = true;
+      try {
+        setStatus('Getting upload slot…', '#4444aa');
+        var ct = encodeURIComponent(pendingFile.type || 'image/jpeg');
+        var presign = await apiRequest('/upload/image/presign?content_type=' + ct, { method: 'POST', body: '{}' });
+        if (!presign.upload_id) throw new Error('Server did not return an upload ID');
+
+        setStatus('Uploading image…', '#4444aa');
+        var form = new FormData();
+        Object.entries(presign.fields).forEach(function(entry) { form.append(entry[0], entry[1]); });
+        form.append('file', pendingFile);
+        var s3 = await fetch(presign.url, { method: 'POST', body: form });
+        if (!s3.ok && s3.status !== 204) throw new Error('Upload failed (S3 ' + s3.status + ')');
+
+        setStatus('Sending to frame…', '#4444aa');
+        var result = await apiRequest('/upload/image/lock-to-device', {
+          method: 'POST',
+          body: JSON.stringify({ device_id: selectedDevice, upload_id: presign.upload_id })
+        });
+
+        if (result && result.detail && !result.success) throw new Error(result.detail);
+
+        setStatus('✅ Sent! Image will appear in ~30 seconds.', '#4040ff');
+        pendingFile = null;
+        document.getElementById('fc-fname').textContent = '';
+        document.getElementById('fc-file').value = '';
+      } catch (err) {
+        setStatus('❌ ' + err.message, '#aa4444');
+      } finally {
+        updateBtn();
+      }
+    }
+
+    loadFrames();
+  }
+
+  return '(' + controller.toString() + ')()';
+})();
+
+// Inject into the bookmarklet link
+document.getElementById('bm-link').href = 'javascript:' + encodeURIComponent(bookmarkletCode);
+</script>
+
+</body>
+</html>
