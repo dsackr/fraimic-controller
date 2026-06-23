@@ -17,6 +17,7 @@ import concurrent.futures
 from io import BytesIO
 from pathlib import Path
 
+import numpy as np
 import requests
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from PIL import Image
@@ -56,17 +57,60 @@ SPECTRA6 = [
     (255, 255, 0),    # 5: Yellow
 ]
 
-# Pre-built Pillow palette image (used by quantize at startup once)
-def _build_palette_image(palette):
-    pal_img = Image.new("P", (1, 1))
-    flat = []
-    for c in palette:
-        flat.extend(c)
-    flat.extend([0] * (256 * 3 - len(flat)))
-    pal_img.putpalette(flat)
-    return pal_img
+# Numpy array for fast perceptual distance calculation
+SPECTRA6_NP = np.array(SPECTRA6, dtype=np.float32)
 
-PALETTE_IMG = _build_palette_image(SPECTRA6)
+# Perceptual weights for RGB distance (luminance-weighted)
+RGB_WEIGHTS = np.array([0.299, 0.587, 0.114], dtype=np.float32)
+
+
+def _nearest_color(r, g, b):
+    """Return Spectra 6 palette index nearest to (r, g, b)."""
+    diffs = SPECTRA6_NP - np.array([r, g, b], dtype=np.float32)
+    dists = (diffs * diffs * RGB_WEIGHTS).sum(axis=1)
+    return int(np.argmin(dists))
+
+
+def _atkinson_dither(img_array, width, height):
+    """
+    Atkinson dithering to Spectra 6 palette.
+    Returns flat uint8 array of palette indices (length = width * height).
+
+    Atkinson distributes 1/8 of the quantization error to 6 neighbors
+    (total 6/8 — the remaining 2/8 is discarded). This preserves highlights
+    better than Floyd-Steinberg and is preferred for limited-palette displays.
+
+    Error diffusion pattern (each neighbor gets 1/8):
+        .  X  1  1
+        1  1  1  .
+        .  1  .  .
+    """
+    buf = img_array.astype(np.float32)   # (H, W, 3) — modified in place
+    out = np.zeros(height * width, dtype=np.uint8)
+
+    for y in range(height):
+        for x in range(width):
+            r = float(np.clip(buf[y, x, 0], 0, 255))
+            g = float(np.clip(buf[y, x, 1], 0, 255))
+            b = float(np.clip(buf[y, x, 2], 0, 255))
+
+            idx = _nearest_color(r, g, b)
+            out[y * width + x] = idx
+
+            pr, pg, pb = SPECTRA6[idx]
+            er = (r - pr) / 8
+            eg = (g - pg) / 8
+            eb = (b - pb) / 8
+
+            # 6 neighbors, each gets 1/8 of the error
+            for dx, dy in ((1,0),(2,0),(-1,1),(0,1),(1,1),(0,2)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < width and 0 <= ny < height:
+                    buf[ny, nx, 0] += er
+                    buf[ny, nx, 1] += eg
+                    buf[ny, nx, 2] += eb
+
+    return out
 
 # ── Frame defaults ────────────────────────────────────────────────────────────
 
@@ -167,15 +211,14 @@ def image_to_bin(image_data, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT,
 
     img = resize_image(img, width, height, mode=resize_mode)
 
-    # quantize() returns a P-mode image; pixel values are palette indices 0-5
-    quantized = img.quantize(palette=PALETTE_IMG, dither=Image.Dither.FLOYDSTEINBERG)
-    px = quantized.tobytes()  # one byte per pixel
+    # Atkinson dithering → palette indices 0-5
+    px = _atkinson_dither(np.array(img), width, height)
 
     # Pack 2 pixels per byte: high nibble = even pixel, low nibble = odd pixel
     n = width * height
     out = bytearray(n // 2)
     for i in range(0, n, 2):
-        out[i >> 1] = (px[i] << 4) | px[i + 1]
+        out[i >> 1] = (int(px[i]) << 4) | int(px[i + 1])
 
     return bytes(out)
 
@@ -422,8 +465,10 @@ def preview_image():
         img = img.rotate(-rotate, expand=True)
     img = resize_image(img, width, height, mode=resize_mode)
 
-    quantized = img.quantize(palette=PALETTE_IMG, dither=Image.Dither.FLOYDSTEINBERG)
-    rgb = quantized.convert("RGB")
+    px = _atkinson_dither(np.array(img), width, height)
+    rgb_pixels = [SPECTRA6[int(i)] for i in px]
+    rgb = Image.new("RGB", (width, height))
+    rgb.putdata(rgb_pixels)
 
     # Scale down for browser preview
     prev_h = int(height * max_w / width)
